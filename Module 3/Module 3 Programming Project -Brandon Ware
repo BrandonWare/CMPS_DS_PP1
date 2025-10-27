@@ -28,15 +28,13 @@ function Node(element) {
 }
 
 function LinkedList() {
-  this.head = null;
   this.length = 0;
+  this.head = null;
 }
 
-// add the prototype methods
 LinkedList.prototype.append = function(element) {
   var node = new Node(element);
   var current;
-
   if (this.head === null) {
     this.head = node;
   } else {
@@ -51,7 +49,10 @@ LinkedList.prototype.append = function(element) {
 
 LinkedList.prototype.insert = function(position, element) {
   if (position >= 0 && position <= this.length) {
-    var node = new Node(element), current = this.head, previous, index = 0;
+    var node = new Node(element),
+        current = this.head,
+        previous,
+        index = 0;
 
     if (position === 0) {
       node.next = this.head;
@@ -74,7 +75,9 @@ LinkedList.prototype.insert = function(position, element) {
 
 LinkedList.prototype.removeAt = function(position) {
   if (position > -1 && position < this.length) {
-    var current = this.head, previous, index = 0;
+    var current = this.head,
+        previous,
+        index = 0;
 
     if (position === 0) {
       this.head = current.next;
@@ -93,8 +96,14 @@ LinkedList.prototype.removeAt = function(position) {
   }
 };
 
+LinkedList.prototype.remove = function(element) {
+  var index = this.indexOf(element);
+  return this.removeAt(index);
+};
+
 LinkedList.prototype.indexOf = function(element) {
-  var current = this.head, index = 0;
+  var current = this.head,
+      index = 0;
   while (current) {
     if (current.element === element) {
       return index;
@@ -121,7 +130,7 @@ LinkedList.prototype.toString = function() {
   var current = this.head;
   var string = "List: ";
   while (current) {
-    string += current.element.name + (current.next ? " -> " : "");
+    string += current.element + (current.next ? " -> " : "");
     current = current.next;
   }
   return string;
@@ -131,79 +140,26 @@ LinkedList.prototype.print = function() {
   console.log(this.toString());
 };
 
-// 3. Implement a getNodeAt(position) method (using the prototype)
-LinkedList.prototype.getNodeAt = function(position) {
-  if (position > -1 && position < this.length) {
-    var current = this.head;
-    var index = 0;
-    while (index++ < position) {
-      current = current.next;
-    }
-    return current;
-  }
-  return null;
-};
+// 2. Write a simple test program that shows your implementation works.
 
-// 4. Implement an appendNode(node) method (using the prototype)
-LinkedList.prototype.appendNode = function(node) {
-  if (this.head === null) {
-    this.head = node;
-  } else {
-    var current = this.head;
-    while (current.next) {
-      current = current.next;
-    }
-    current.next = node;
-  }
-  // NOTE: We do NOT increase length here because the shared chain is reused.
-};
+var landmarks = new LinkedList();
 
-// creating the landmarks
-function Landmark(name) {
-  this.name = name;
-}
+landmarks.append("A1");
+landmarks.append("B");
+landmarks.append("C");
+landmarks.append("D");
+landmarks.append("E");
+landmarks.print();
 
-var a1 = new Landmark("A1");
-var a2 = new Landmark("A2");
-var a3 = new Landmark("A3");
-var a4 = new Landmark("A4");
-var b = new Landmark("B");
-var c = new Landmark("C");
-var d = new Landmark("D");
-var e = new Landmark("E");
+landmarks.insert(1, "A2");
+landmarks.print();
 
-var list1 = new LinkedList();
-var list2 = new LinkedList();
-var list3 = new LinkedList();
+landmarks.remove("C");
+landmarks.print();
 
-// 1. Store the landmarks for directions (1) in list1 using append.
-list1.append(a1);
-list1.append(b);
-list1.append(c);
-list1.append(d);
-list1.append(e);
-
-// 2. Store the landmarks for directions (2) in list2, but only include A2 for now.
-list2.append(a2);
-
-// 5. Uncomment the lines below and make sure the correct directions are printed.
-var tmpNode = list1.getNodeAt(1); // node containing B
-list2.appendNode(tmpNode); // append shared chain starting at B
-list1.print(); // A1 -> B -> C -> D -> E
-list2.print(); // A2 -> B -> C -> D -> E
-
-// 6. Follow the same steps for directions (3)
-list3.append(a3);
-list3.append(a4);
-var sharedNode = list1.getNodeAt(2); // node containing C
-list3.appendNode(sharedNode);
-list3.print(); // A3 -> A4 -> C -> D -> E
-
-// 7. What is the problem with the size() method? How can you fix this?
-console.log("Size of list1:", list1.size());
-console.log("Size of list2:", list2.size());
-console.log("Size of list3:", list3.size());
-console.log("Note: size() is incorrect when lists share nodes!");
+console.log("Index of D:", landmarks.indexOf("D"));
+console.log("Size:", landmarks.size());
+console.log("Is Empty:", landmarks.isEmpty());
 
 </script>
 </head>
