@@ -1,0 +1,216 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CMPS 260: Module 4 Programming Project</title>
+<style>* { font-family: monospace; }</style>
+<script>
+
+// NOTE: You must implement the data structures using the prototype approach.
+//      This is not what the book uses, so you have to convert it.
+//      See also: https://it.pointpark.edu/tutorials/no-prototype-vs-prototype/
+
+// NOTE: Please review the following links regularly:
+//      https://it.pointpark.edu/tutorials/arrays-vs-objects/
+//      https://it.pointpark.edu/tutorials/no-prototype-vs-prototype/
+//      https://it.pointpark.edu/tutorials/implementation-vs-interface/
+
+//---------//
+// Project //
+//---------//
+console.log("Project");
+
+// Example scenario (from the Applied Computer Science tutorial):
+// All students: Mary, Joe, Tim, Rosalee, Vincent, Caroline
+// Class 1: Rosalee, Joe, Mary, Tim
+// Class 2: Mary, Tim, Vincent, Rosalee, Caroline
+// Class 3: Caroline, Tim, Vincent, Rosalee, Joe
+
+//--------------------------------//
+// Implementing the Set prototype //
+//--------------------------------//
+function Set() {
+  this.items = {};
+}
+Set.prototype.has = function(value) {
+  return Object.prototype.hasOwnProperty.call(this.items, value);
+};
+Set.prototype.add = function(value) {
+  if (!this.has(value)) {
+    this.items[value] = value;
+    return true;
+  }
+  return false;
+};
+Set.prototype.delete = function(value) {
+  if (this.has(value)) {
+    delete this.items[value];
+    return true;
+  }
+  return false;
+};
+Set.prototype.clear = function() {
+  this.items = {};
+};
+Set.prototype.values = function() {
+  return Object.values(this.items);
+};
+Set.prototype.union = function(otherSet) {
+  var unionSet = new Set();
+  this.values().forEach(v => unionSet.add(v));
+  otherSet.values().forEach(v => unionSet.add(v));
+  return unionSet;
+};
+Set.prototype.intersection = function(otherSet) {
+  var intersect = new Set();
+  this.values().forEach(v => {
+    if (otherSet.has(v)) intersect.add(v);
+  });
+  return intersect;
+};
+Set.prototype.difference = function(otherSet) {
+  var diff = new Set();
+  this.values().forEach(v => {
+    if (!otherSet.has(v)) diff.add(v);
+  });
+  return diff;
+};
+Set.prototype.subset = function(otherSet) {
+  return this.values().every(v => otherSet.has(v));
+};
+
+// --- Testing the Set with class attendance ---
+var allStudents = new Set();
+["Mary","Joe","Tim","Rosalee","Vincent","Caroline"].forEach(s => allStudents.add(s));
+var class1 = new Set(); ["Rosalee","Joe","Mary","Tim"].forEach(s => class1.add(s));
+var class2 = new Set(); ["Mary","Tim","Vincent","Rosalee","Caroline"].forEach(s => class2.add(s));
+var class3 = new Set(); ["Caroline","Tim","Vincent","Rosalee","Joe"].forEach(s => class3.add(s));
+
+// Students who attended at least one class
+var anyClass = class1.union(class2).union(class3);
+console.log("Students in at least one class:", anyClass.values());
+
+// Students who attended all classes
+var allClasses = class1.intersection(class2).intersection(class3);
+console.log("Students in all classes:", allClasses.values());
+
+// Subset check
+console.log("Everyone in anyClass ⊆ All Students:", anyClass.subset(allStudents));
+console.log("Everyone in allClasses ⊆ All Students:", allClasses.subset(allStudents));
+
+//--------------------------------//
+// Implementing the Dictionary prototype //
+//--------------------------------//
+function Dictionary() {
+  this.items = {};
+}
+Dictionary.prototype.has = function(key) {
+  return Object.prototype.hasOwnProperty.call(this.items, key);
+};
+Dictionary.prototype.set = function(key, value) {
+  this.items[key] = value;
+};
+Dictionary.prototype.get = function(key) {
+  return this.has(key) ? this.items[key] : undefined;
+};
+Dictionary.prototype.delete = function(key) {
+  if (this.has(key)) {
+    delete this.items[key];
+    return true;
+  }
+  return false;
+};
+Dictionary.prototype.keys = function() { return Object.keys(this.items); };
+Dictionary.prototype.values = function() { return Object.values(this.items); };
+Dictionary.prototype.clear = function() { this.items = {}; };
+Dictionary.prototype.merge = function(dict) {
+  dict.keys().forEach(k => this.set(k, dict.get(k)));
+};
+Dictionary.prototype.print = function() {
+  console.log(this.items);
+};
+
+// --- Testing Dictionary ---
+var dict1 = new Dictionary();
+dict1.set("key1","val1");
+dict1.set("key2","val2");
+var dict2 = new Dictionary();
+dict2.set("key3","val3");
+dict2.set("key2","updated");
+dict1.merge(dict2);
+dict1.print();
+
+//--------------------------------//
+// Implementing the HashTable prototype //
+//--------------------------------//
+function ValuePair(key, value) {
+  this.key = key;
+  this.value = value;
+}
+function HashTable() {
+  this.table = [];
+}
+HashTable.prototype.loseloseHashCode = function(key) {
+  var hash = 0;
+  for (var i = 0; i < key.length; i++) {
+    hash += key.charCodeAt(i);
+  }
+  return hash % 37;
+};
+HashTable.prototype.put = function(key, value) {
+  var position = this.loseloseHashCode(key);
+  if (!this.table[position]) this.table[position] = [];
+  var bucket = this.table[position];
+  for (var i = 0; i < bucket.length; i++) {
+    if (bucket[i].key === key) {
+      bucket[i].value = value;
+      return;
+    }
+  }
+  bucket.push(new ValuePair(key, value));
+};
+HashTable.prototype.get = function(key) {
+  var position = this.loseloseHashCode(key);
+  var bucket = this.table[position];
+  if (bucket) {
+    for (var i = 0; i < bucket.length; i++) {
+      if (bucket[i].key === key) return bucket[i].value;
+    }
+  }
+  return undefined;
+};
+HashTable.prototype.remove = function(key) {
+  var position = this.loseloseHashCode(key);
+  var bucket = this.table[position];
+  if (bucket) {
+    for (var i = 0; i < bucket.length; i++) {
+      if (bucket[i].key === key) {
+        bucket.splice(i, 1);
+        return true;
+      }
+    }
+  }
+  return false;
+};
+HashTable.prototype.print = function() {
+  for (var i = 0; i < this.table.length; i++) {
+    if (this.table[i]) {
+      console.log(i + ":", this.table[i].map(p => `[${p.key}-${p.value}]`).join(" -> "));
+    }
+  }
+};
+
+// --- Testing HashTable ---
+var hash = new HashTable();
+hash.put("Gandalf","Wizard");
+hash.put("Frodo","Hobbit");
+hash.put("Sam","Friend");
+console.log("Get Gandalf:", hash.get("Gandalf"));
+hash.print();
+
+</script>
+</head>
+<body>
+  See console!
+</body>
+</html>
