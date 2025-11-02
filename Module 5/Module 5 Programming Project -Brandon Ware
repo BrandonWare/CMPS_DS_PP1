@@ -1,0 +1,271 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>CMPS 260: Module 5 Programming Project</title>
+<style>* { font-family: monospace; }</style>
+<script>
+
+// NOTE: You must implement the data structures using the prototype approach.
+//       This is not what the book uses, so you have to convert it.
+//       See also: https://it.pointpark.edu/tutorials/no-prototype-vs-prototype/
+
+// NOTE: Please review the following links regularly:
+//       https://it.pointpark.edu/tutorials/arrays-vs-objects/
+//       https://it.pointpark.edu/tutorials/no-prototype-vs-prototype/
+//       https://it.pointpark.edu/tutorials/implementation-vs-interface/
+
+
+
+//---------//
+// Project //
+//---------//
+console.log("Project");
+
+//---------------//
+// Tree (BST)    //
+//---------------//
+function Node(key) {
+  this.key = key;
+  this.left = null;
+  this.right = null;
+}
+
+function BinarySearchTree() {
+  this.root = null;
+}
+
+BinarySearchTree.prototype._insertNode = function(node, newNode) {
+  if (newNode.key < node.key) {
+    if (node.left === null) node.left = newNode;
+    else this._insertNode(node.left, newNode);
+  } else {
+    if (node.right === null) node.right = newNode;
+    else this._insertNode(node.right, newNode);
+  }
+};
+
+BinarySearchTree.prototype.insert = function(key) {
+  var newNode = new Node(key);
+  if (this.root === null) this.root = newNode;
+  else this._insertNode(this.root, newNode);
+};
+
+BinarySearchTree.prototype._inOrderTraverseNode = function(node, callback) {
+  if (node !== null) {
+    this._inOrderTraverseNode(node.left, callback);
+    callback(node.key);
+    this._inOrderTraverseNode(node.right, callback);
+  }
+};
+
+BinarySearchTree.prototype.inOrderTraverse = function(callback) {
+  this._inOrderTraverseNode(this.root, callback);
+};
+
+BinarySearchTree.prototype._preOrderTraverseNode = function(node, callback) {
+  if (node !== null) {
+    callback(node.key);
+    this._preOrderTraverseNode(node.left, callback);
+    this._preOrderTraverseNode(node.right, callback);
+  }
+};
+
+BinarySearchTree.prototype.preOrderTraverse = function(callback) {
+  this._preOrderTraverseNode(this.root, callback);
+};
+
+BinarySearchTree.prototype._postOrderTraverseNode = function(node, callback) {
+  if (node !== null) {
+    this._postOrderTraverseNode(node.left, callback);
+    this._postOrderTraverseNode(node.right, callback);
+    callback(node.key);
+  }
+};
+
+BinarySearchTree.prototype.postOrderTraverse = function(callback) {
+  this._postOrderTraverseNode(this.root, callback);
+};
+
+BinarySearchTree.prototype._minNode = function(node) {
+  while (node && node.left !== null) node = node.left;
+  return node.key;
+};
+
+BinarySearchTree.prototype.min = function() {
+  return this._minNode(this.root);
+};
+
+BinarySearchTree.prototype._maxNode = function(node) {
+  while (node && node.right !== null) node = node.right;
+  return node.key;
+};
+
+BinarySearchTree.prototype.max = function() {
+  return this._maxNode(this.root);
+};
+
+BinarySearchTree.prototype._searchNode = function(node, key) {
+  if (node === null) return false;
+  if (key < node.key) return this._searchNode(node.left, key);
+  else if (key > node.key) return this._searchNode(node.right, key);
+  else return true;
+};
+
+BinarySearchTree.prototype.search = function(key) {
+  return this._searchNode(this.root, key);
+};
+
+// Print helper
+BinarySearchTree.prototype.print = function() {
+  function print(node) {
+    if (node !== null) {
+      var left = node.left ? node.left.key : "None";
+      var right = node.right ? node.right.key : "None";
+      console.log(left + " <-- " + node.key + " --> " + right);
+      print(node.left);
+      print(node.right);
+    }
+  }
+  console.log("===tree===");
+  print(this.root);
+  console.log("==========");
+};
+
+// Build tree example (same as book)
+var tree = new BinarySearchTree();
+[11,7,15,5,9,13,20,3,6,8,10,12,14,18,25,19].forEach(x => tree.insert(x));
+tree.print();
+
+function printNode(value) { console.log(value); }
+
+console.log("In-order:");
+tree.inOrderTraverse(printNode);
+
+console.log("Pre-order:");
+tree.preOrderTraverse(printNode);
+
+console.log("Post-order:");
+tree.postOrderTraverse(printNode);
+
+console.log("Min:", tree.min());
+console.log("Max:", tree.max());
+console.log("Search 19:", tree.search(19));
+console.log("Search 100:", tree.search(100));
+
+// Copying and balancing logic (conceptual)
+var keys = [];
+tree.inOrderTraverse(function(value) { keys.push(value); });
+console.log("Collected keys:", keys);
+
+//---------------//
+// Graph & Prim  //
+//---------------//
+function Graph() {
+  this.vertices = [];
+  this.adjMatrix = [];
+}
+
+Graph.prototype.addVertex = function(v) {
+  this.vertices.push(v);
+  var len = this.vertices.length;
+  for (var i = 0; i < len; i++) {
+    if (!this.adjMatrix[i]) this.adjMatrix[i] = [];
+    for (var j = 0; j < len; j++) {
+      if (this.adjMatrix[i][j] === undefined) this.adjMatrix[i][j] = 0;
+    }
+  }
+};
+
+Graph.prototype.addEdge = function(v1, v2, w) {
+  var i = this.vertices.indexOf(v1);
+  var j = this.vertices.indexOf(v2);
+  this.adjMatrix[i][j] = w;
+  this.adjMatrix[j][i] = w;
+};
+
+Graph.prototype.printGraph = function() {
+  console.log("Vertices:", this.vertices);
+  console.log("Adjacency matrix:");
+  console.table(this.adjMatrix);
+};
+
+// Prim's Algorithm
+Graph.prototype.primMST = function() {
+  var numVertices = this.vertices.length;
+  var parent = [];
+  var key = [];
+  var mstSet = [];
+
+  for (var i = 0; i < numVertices; i++) {
+    key[i] = Infinity;
+    mstSet[i] = false;
+  }
+
+  key[0] = 0;
+  parent[0] = -1;
+
+  for (var count = 0; count < numVertices - 1; count++) {
+    var min = Infinity;
+    var minIndex = -1;
+
+    for (var v = 0; v < numVertices; v++) {
+      if (mstSet[v] === false && key[v] < min) {
+        min = key[v];
+        minIndex = v;
+      }
+    }
+
+    mstSet[minIndex] = true;
+
+    for (var v = 0; v < numVertices; v++) {
+      if (
+        this.adjMatrix[minIndex][v] &&
+        mstSet[v] === false &&
+        this.adjMatrix[minIndex][v] < key[v]
+      ) {
+        parent[v] = minIndex;
+        key[v] = this.adjMatrix[minIndex][v];
+      }
+    }
+  }
+
+  console.log("Edge   Weight");
+  for (var i = 1; i < numVertices; i++) {
+    console.log(
+      this.vertices[parent[i]] +
+        " - " +
+        this.vertices[i] +
+        "   " +
+        this.adjMatrix[i][parent[i]]
+    );
+  }
+};
+
+// Example from the book for Prim's MST
+var graph = new Graph();
+["A","B","C","D","E","F","G"].forEach(v => graph.addVertex(v));
+
+// Add weighted edges (same as textbook)
+graph.addEdge("A","B",2);
+graph.addEdge("A","C",4);
+graph.addEdge("B","C",1);
+graph.addEdge("B","D",7);
+graph.addEdge("C","E",3);
+graph.addEdge("D","F",1);
+graph.addEdge("E","D",2);
+graph.addEdge("E","F",5);
+graph.addEdge("E","G",7);
+graph.addEdge("F","G",6);
+
+graph.printGraph();
+
+console.log("Prim's Minimum Spanning Tree:");
+graph.primMST();
+
+</script>
+</head>
+<body>
+  See console!
+</body>
+</html>
